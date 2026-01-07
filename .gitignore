@@ -36,3 +36,5 @@ coverage/
 .DS_Store
 Thumbs.
 text.md
+
+*.txt

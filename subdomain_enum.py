@@ -13,9 +13,6 @@ from dotenv import load_dotenv
 
 load_dotenv() #environment variables for sensitive info such as bot tokens for telegram notification
 
-telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
-telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
-discord_webhook = os.getenv('DISCORD_WEBHOOK')
 
 # colors for terminal output
 class Colors:
@@ -27,6 +24,8 @@ class Colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+
 
 def print_status(message, status_type="info"):
     #printing formatted status messages with colors
@@ -58,6 +57,8 @@ def check_tool_installed(tool_name):
             return result.returncode == 0
     except Exception as e:
         return False
+    
+
 
 def run_subfinder(domain, output_file):
 
@@ -81,7 +82,8 @@ def run_subfinder(domain, output_file):
         
         # extracting subdomains from output
         subdomains = result.stdout.strip().split('\n')
-        # Filter out empty lines
+
+        # filtering out empty lines
         subdomains = [sub for sub in subdomains if sub.strip()]
         
         # removing duplicates while preserving order
@@ -117,6 +119,8 @@ def run_subfinder(domain, output_file):
     except Exception as e:
         print_status(f"Error running subfinder: {str(e)}", "error")
         return []
+    
+
 
 def run_httpx(subdomains_file, output_file):
 
@@ -149,7 +153,7 @@ def run_httpx(subdomains_file, output_file):
     
     try:
         print_status(f"Running httpx on {subdomain_count} subdomains")
-        print_status(f"Command: {' '.join(cmd[:5])}...")  # Show partial command
+        print_status(f"Command: {' '.join(cmd)}")  
         
         # executing httpx
         start_time = time.time()
@@ -203,8 +207,10 @@ def run_httpx(subdomains_file, output_file):
     except Exception as e:
         print_status(f"Error running httpx: {str(e)}", "error")
         return []
+    
 
-def send_notification(domain, total_subdomains, live_hosts, webhook_url=None, platform="telegram"):
+
+def send_notification(domain, total_subdomains, live_hosts, webhook_url=platform_webhook, platform=platform):
 
     if not webhook_url:
         return False
@@ -358,6 +364,8 @@ Examples:
     
     #  2. running httpx
     if not args.skip_httpx and subdomains:
+        print("subdomain file name")
+        print(subdomains_file)
         live_hosts = run_httpx(str(subdomains_file), str(live_hosts_file))
     elif args.skip_httpx:
         print_status("Skipping httpx step", "info")
@@ -401,8 +409,19 @@ Examples:
     # sending notification 
     if args.notify != 'none' and args.webhook:
         print_status(f"Sending notification via {args.notify}...")
-        send_notification(args.domain, len(subdomains), len(live_hosts), 
-                         args.webhook, args.notify)
+        send_notification(args.domain, len(subdomains), len(live_hosts), args.webhook, args.notify)
+
+    elif args.notify != 'none' and args.webhook_url is None:
+        # try to get webhook from environment if not specified
+        env_var_name = f"{args.notify.upper()}_WEBHOOK"
+        webhook_url = os.getenv(env_var_name)
+        
+        if webhook_url:
+            print_status(f"Sending notification via {args.notify} (from environment)...")
+            send_notification(args.domain, len(subdomains), len(live_hosts), webhook_url, args.notify)
+        else:
+            print_status(f"No webhook available for {args.notify}", "warning")
+            print_status(f"Either pass --webhook URL or set {env_var_name} in environment", "info")
     
     print_status("=" * 60)
     print_status("Scan Complete!", "success")
