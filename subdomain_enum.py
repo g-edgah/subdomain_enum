@@ -234,7 +234,7 @@ Subdomain Scan Complete!
                 'parse_mode': 'HTML'
             }
             url = f"{webhook_url}/sendMessage"
-            print(f"url: {url}")
+            #print(f"url: {url}")
             response = requests.post(url, json=payload, timeout=10)
             
         elif platform == "discord":
