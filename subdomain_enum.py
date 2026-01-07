@@ -28,7 +28,7 @@ class Colors:
 
 
 def print_status(message, status_type="info"):
-    #printing formatted status messages with colors
+    # printing formatted status messages with colors
     timestamp = datetime.now().strftime("%H:%M:%S")
     if status_type == "success":
         print(f"{Colors.GREEN}[{timestamp}] [+] {message}{Colors.ENDC}")
@@ -42,7 +42,7 @@ def print_status(message, status_type="info"):
         print(f"[{timestamp}] [*] {message}")
 
 def check_tool_installed(tool_name):
-    #checking if required tool is installed and accessible
+    # checking if required tool is installed and accessible
     try:
         result = subprocess.run(['which', tool_name], 
                                capture_output=True, 
@@ -233,8 +233,8 @@ Subdomain Scan Complete!
                 'text': message,
                 'parse_mode': 'HTML'
             }
-            bot_token = webhook_url.split('/')[-2]
-            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            url = f"{webhook_url}/sendMessage"
+            print(f"url: {url}")
             response = requests.post(url, json=payload, timeout=10)
             
         elif platform == "discord":
@@ -371,6 +371,9 @@ Examples:
         print_status("Skipping httpx step", "info")
     else:
         print_status("No subdomains to probe with httpx", "warning")
+    
+    if args.notify == "none":
+        print_status("Not sending notification", "info")
     
     # generating report
     try:
