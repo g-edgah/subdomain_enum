@@ -210,7 +210,7 @@ def run_httpx(subdomains_file, output_file):
     
 
 
-def send_notification(domain, total_subdomains, live_hosts, webhook_url=platform_webhook, platform=platform):
+def send_notification(domain, total_subdomains, live_hosts, webhook_url=None, platform="telegram"):
 
     if not webhook_url:
         return False
@@ -234,7 +234,7 @@ Subdomain Scan Complete!
                 'parse_mode': 'HTML'
             }
             bot_token = webhook_url.split('/')[-2]
-            url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
             response = requests.post(url, json=payload, timeout=10)
             
         elif platform == "discord":
@@ -411,8 +411,8 @@ Examples:
         print_status(f"Sending notification via {args.notify}...")
         send_notification(args.domain, len(subdomains), len(live_hosts), args.webhook, args.notify)
 
-    elif args.notify != 'none' and args.webhook_url is None:
-        # try to get webhook from environment if not specified
+    elif args.notify != 'none' and args.webhook is None:
+        # trying to get webhook from environment if not specified
         env_var_name = f"{args.notify.upper()}_WEBHOOK"
         webhook_url = os.getenv(env_var_name)
         
